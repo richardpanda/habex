@@ -19,6 +19,10 @@ defmodule HabexWeb.Router do
     get "/", PageController, :index
   end
 
+  scope "/auth", HabexWeb do
+    post "/signup", AuthController, :signup
+  end
+
   # Other scopes may use custom stacks.
   # scope "/api", HabexWeb do
   #   pipe_through :api

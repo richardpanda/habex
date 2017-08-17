@@ -20,6 +20,7 @@ defmodule HabexWeb.Router do
   end
 
   scope "/auth", HabexWeb do
+    post "/signin", AuthController, :signin
     post "/signup", AuthController, :signup
   end
 

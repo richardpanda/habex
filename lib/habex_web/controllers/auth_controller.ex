@@ -4,6 +4,27 @@ defmodule HabexWeb.AuthController do
   alias Comeonin.Bcrypt
   alias Habex.{Repo, User}
 
+  def signin(conn, %{"email" => email, "password" => password}) do
+    case Repo.get_by(User, email: email) do
+      nil ->
+        conn
+        |> put_status(:bad_request)
+        |> json(%{message: "Invalid email and/or password."})
+      user ->
+        case Bcrypt.checkpw(password, user.password_hash) do
+          true ->
+            {:ok, token, _map} = Guardian.encode_and_sign(%User{id: user.id})
+            conn
+            |> put_status(:ok)
+            |> json(%{id: user.id, email: email, token: token})
+          false ->
+            conn
+            |> put_status(:bad_request)
+            |> json(%{message: "Invalid email and/or password."})
+        end
+    end
+  end
+
   def signup(conn, %{"email" => email, "password" => password, "password_confirm" => password_confirm}) do
     if password != password_confirm do
       conn

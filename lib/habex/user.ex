@@ -1,12 +1,13 @@
 defmodule Habex.User do
   use Ecto.Schema
   import Ecto.Changeset
-  alias Habex.User
+  alias Habex.{Task, User}
 
 
   schema "users" do
     field :email, :string
     field :password_hash, :string
+    has_many :tasks, Task
 
     timestamps()
   end

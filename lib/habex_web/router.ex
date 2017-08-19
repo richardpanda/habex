@@ -11,12 +11,20 @@ defmodule HabexWeb.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
+    plug Guardian.Plug.VerifyHeader, realm: "Bearer"
+    plug Guardian.Plug.LoadResource
   end
 
   scope "/", HabexWeb do
     pipe_through :browser # Use the default browser stack
 
     get "/", PageController, :index
+  end
+
+  scope "/api", HabexWeb do
+    pipe_through :api
+
+    post "/tasks", TaskController, :create
   end
 
   scope "/auth", HabexWeb do

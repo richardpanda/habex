@@ -1,7 +1,7 @@
 defmodule HabexWeb.TaskController do
   use HabexWeb, :controller
 
-  alias Habex.{Repo, Status, Task, User}
+  alias Habex.{Repo, Status, Task}
 
   plug Guardian.Plug.EnsureAuthenticated, handler: __MODULE__
 

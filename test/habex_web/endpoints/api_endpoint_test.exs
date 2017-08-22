@@ -3,6 +3,76 @@ defmodule HabexWeb.ApiEndpointTest do
 
   alias Habex.{Repo, Status, Task, User}
 
+  describe "PUT /api/statuses/:id" do
+    test "update task status" do
+      user =
+        User.changeset(%User{}, %{email: "test@test.com", password_hash: "password"})
+        |> Repo.insert!()
+
+      {:ok, token, _map} = Guardian.encode_and_sign(%User{id: user.id})
+
+      task =
+        Task.changeset(%Task{}, %{name: "Task 1", user_id: user.id})
+        |> Repo.insert!()
+
+      status = 
+        Status.changeset(%Status{}, %{date: Date.utc_today(), task_id: task.id})
+        |> Repo.insert!()
+
+      req_body = [done: true]
+      conn =
+        build_conn()
+        |> put_req_header("authorization", "Bearer #{token}")
+        |> put("/api/statuses/#{status.id}", req_body)
+      resp_body = Poison.decode!(conn.resp_body)
+
+      assert conn.status == 200
+      assert resp_body["date"] == Date.utc_today() |> Date.to_string()
+      assert resp_body["done"] == true
+      assert resp_body["id"] == status.id
+    end
+
+    test "cannot update another user's task status" do
+      user =
+        User.changeset(%User{}, %{email: "test@test.com", password_hash: "password"})
+        |> Repo.insert!()
+
+      different_user =
+        User.changeset(%User{}, %{email: "test2@test.com", password_hash: "password"})
+        |> Repo.insert!()
+
+      {:ok, token, _map} = Guardian.encode_and_sign(%User{id: different_user.id})
+
+      task =
+        Task.changeset(%Task{}, %{name: "Task 1", user_id: user.id})
+        |> Repo.insert!()
+
+      status = 
+        Status.changeset(%Status{}, %{date: Date.utc_today(), task_id: task.id})
+        |> Repo.insert!()
+
+      req_body = [done: true]
+      conn =
+        build_conn()
+        |> put_req_header("authorization", "Bearer #{token}")
+        |> put("/api/statuses/#{status.id}", req_body)
+      resp_body = Poison.decode!(conn.resp_body)
+
+      assert conn.status == 401
+      assert resp_body["message"] == "You do not have permission to do that."
+    end
+
+    test "cannot update task status without a token" do
+      conn =
+        build_conn()
+        |> put("/api/tasks/#{Date.utc_today()}")
+      resp_body = Poison.decode!(conn.resp_body)
+
+      assert conn.status == 401
+      assert resp_body["message"] == "Authentication is required."
+    end
+  end
+
   describe "POST /api/tasks" do
     test "create task given token and name" do
       user =

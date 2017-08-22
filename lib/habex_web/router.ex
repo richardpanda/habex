@@ -24,6 +24,7 @@ defmodule HabexWeb.Router do
   scope "/api", HabexWeb do
     pipe_through :api
 
+    put "/statuses/:id", StatusController, :update
     post "/tasks", TaskController, :create
     get "/tasks/:date", TaskController, :get_tasks_by_date
   end
